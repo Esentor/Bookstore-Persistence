@@ -1,0 +1,13 @@
+/Users/rsalmean/eclipse workspaces/bookstore-showcase/persistence/src/main/java/com/bookstore/persistence/service/OrderService.java
+/Users/rsalmean/eclipse workspaces/bookstore-showcase/persistence/src/main/java/com/bookstore/persistence/controller/UserController.java
+/Users/rsalmean/eclipse workspaces/bookstore-showcase/persistence/src/main/java/com/bookstore/persistence/service/UserService.java
+/Users/rsalmean/eclipse workspaces/bookstore-showcase/persistence/src/main/java/com/bookstore/persistence/repository/BookDAO.java
+/Users/rsalmean/eclipse workspaces/bookstore-showcase/persistence/src/main/java/com/bookstore/persistence/model/Book.java
+/Users/rsalmean/eclipse workspaces/bookstore-showcase/persistence/src/main/java/com/bookstore/persistence/repository/UserDAO.java
+/Users/rsalmean/eclipse workspaces/bookstore-showcase/persistence/src/main/java/com/bookstore/persistence/controller/BookController.java
+/Users/rsalmean/eclipse workspaces/bookstore-showcase/persistence/src/main/java/com/bookstore/persistence/PersistenceApplication.java
+/Users/rsalmean/eclipse workspaces/bookstore-showcase/persistence/src/main/java/com/bookstore/persistence/repository/OrderDAO.java
+/Users/rsalmean/eclipse workspaces/bookstore-showcase/persistence/src/main/java/com/bookstore/persistence/model/Order.java
+/Users/rsalmean/eclipse workspaces/bookstore-showcase/persistence/src/main/java/com/bookstore/persistence/service/BookService.java
+/Users/rsalmean/eclipse workspaces/bookstore-showcase/persistence/src/main/java/com/bookstore/persistence/model/User.java
+/Users/rsalmean/eclipse workspaces/bookstore-showcase/persistence/src/main/java/com/bookstore/persistence/controller/OrderController.java
