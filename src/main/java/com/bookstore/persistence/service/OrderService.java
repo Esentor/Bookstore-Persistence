@@ -53,25 +53,5 @@ public class OrderService {
 		return true;
 	}
 
-	private OrderDTO toOrderDTO(Order order) {
-		if (order == null) {
-			return null;
-		}
-		OrderDTO orderDTO = new OrderDTO();
-		orderDTO.setId(order.getId());
-		orderDTO.setUserId(order.getUser().getId());
-
-		List<OrderItemDTO> orderItemDTOs = order.getOrderItems().stream().map(x -> toOrderItemDTO(x))
-				.collect(Collectors.toList());
-		orderDTO.setOrderItems(orderItemDTOs);
-
-		return orderDTO;
-	}
-
-	private OrderItemDTO toOrderItemDTO(OrderItem orderItem) {
-		OrderItemDTO orderItemDTO = new OrderItemDTO();
-		orderItemDTO.setId(orderItem.getId());
-		orderItemDTO.setBook(null);
-		return orderItemDTO;
-	}
+	
 }
