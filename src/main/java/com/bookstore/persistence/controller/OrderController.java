@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bookstore.persistence.dto.OrderDTO;
-import com.bookstore.persistence.model.Order;
 import com.bookstore.persistence.service.OrderService;
 
 @RestController
@@ -28,7 +27,7 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<OrderDTO> createOrderDTO(@RequestBody Order Order) {
+    public ResponseEntity<OrderDTO> createOrderDTO(@RequestBody OrderDTO Order) {
         OrderDTO createdOrderDTO = orderService.createOrder(Order);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdOrderDTO);
     }
@@ -54,8 +53,8 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<OrderDTO> updateOrderDTO(@PathVariable Long id, @RequestBody Order updatedOrder) {
-        OrderDTO OrderDTO = orderService.updateOrder(id, updatedOrder);
+    public ResponseEntity<OrderDTO> updateOrderDTO(@PathVariable Long id, @RequestBody OrderDTO updatedOrder) {
+        OrderDTO OrderDTO = orderService.updateOrder(updatedOrder);
         if (OrderDTO != null) {
             return ResponseEntity.ok(OrderDTO);
         } else {

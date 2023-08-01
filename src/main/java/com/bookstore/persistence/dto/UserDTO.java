@@ -6,6 +6,18 @@ public class UserDTO {
 	private String lastName;
 	private String email;
 
+	public UserDTO() {
+		super();
+	}
+
+	public UserDTO(Long id, String firstName, String lastName, String email) {
+		super();
+		this.id = id;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.email = email;
+	}
+
 	public Long getId() {
 		return id;
 	}

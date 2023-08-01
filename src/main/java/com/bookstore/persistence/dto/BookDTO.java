@@ -5,6 +5,18 @@ public class BookDTO {
 	private String title;
 	private String author;
 	private double price;
+	
+	public BookDTO() {
+		super();
+	}
+
+	public BookDTO(Long id, String title, String author, double price) {
+		super();
+		this.id = id;
+		this.title = title;
+		this.author = author;
+		this.price = price;
+	}
 
 	public Long getId() {
 		return id;

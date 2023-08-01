@@ -7,10 +7,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.bookstore.persistence.converter.OrderConverter;
 import com.bookstore.persistence.dto.OrderDTO;
-import com.bookstore.persistence.dto.OrderItemDTO;
 import com.bookstore.persistence.model.Order;
-import com.bookstore.persistence.model.OrderItem;
 import com.bookstore.persistence.repository.OrderDAO;
 
 @Service
@@ -23,26 +22,26 @@ public class OrderService {
 		this.orderDAO = orderDAO;
 	}
 
-	public OrderDTO createOrder(Order order) {
-		return toOrderDTO(orderDAO.save(order));
+	public OrderDTO createOrder(OrderDTO orderDTO) {
+		return OrderConverter.convertToDTO(orderDAO.save(OrderConverter.convertToEntity(orderDTO)));
 	}
 
 	public List<OrderDTO> getAllOrders() {
 		List<Order> orders = orderDAO.findAll();
-		return orders.stream().map(order -> toOrderDTO(order)).collect(Collectors.toList());
+		return orders.stream().map(order -> OrderConverter.toOrderDTO(order)).collect(Collectors.toList());
 	}
 
 	public OrderDTO getOrderById(Long id) {
-		return toOrderDTO(orderDAO.findById(id).orElse(null));
+		return OrderConverter.toOrderDTO(orderDAO.findById(id).orElse(null));
 	}
 
-	public OrderDTO updateOrder(Long orderId, Order updatedOrder) {
-		Order existingOrder = orderDAO.findById(orderId).orElse(null);
+	public OrderDTO updateOrder(OrderDTO updatedOrder) {
+		Order existingOrder = orderDAO.findById(updatedOrder.getId()).orElse(null);
 		if (existingOrder == null) {
 			return null;
 		}
 		BeanUtils.copyProperties(updatedOrder, existingOrder, "id");
-		return toOrderDTO(orderDAO.save(existingOrder));
+		return OrderConverter.toOrderDTO(orderDAO.save(existingOrder));
 	}
 
 	public boolean deleteOrder(Long id) {

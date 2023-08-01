@@ -5,6 +5,17 @@ public class OrderItemDTO {
 	private OrderDTO order;
 	private BookDTO book;
 
+	public OrderItemDTO() {
+		super();
+	}
+
+	public OrderItemDTO(Long id, OrderDTO order, BookDTO book) {
+		super();
+		this.id = id;
+		this.order = order;
+		this.book = book;
+	}
+
 	public Long getId() {
 		return id;
 	}

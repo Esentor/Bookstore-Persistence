@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bookstore.persistence.dto.UserDTO;
-import com.bookstore.persistence.model.User;
 import com.bookstore.persistence.service.UserService;
 
 @RestController
@@ -28,7 +27,7 @@ public class UserController {
 	}
 
 	@PostMapping
-	public ResponseEntity<UserDTO> createUser(@RequestBody User user) {
+	public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO user) {
 		UserDTO createdUser = userService.createUser(user);
 		return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
 	}
@@ -54,8 +53,8 @@ public class UserController {
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
-		UserDTO user = userService.updateUser(id, updatedUser);
+	public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserDTO updatedUser) {
+		UserDTO user = userService.updateUser(updatedUser);
 		if (user != null) {
 			return ResponseEntity.ok(user);
 		} else {

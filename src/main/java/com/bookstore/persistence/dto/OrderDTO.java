@@ -5,8 +5,19 @@ import java.util.List;
 
 public class OrderDTO {
 	private Long id;
-	private Long userId;
+	private UserDTO user;
 	private List<OrderItemDTO> orderItems;
+	
+	public OrderDTO() {
+		super();
+	}
+
+	public OrderDTO(Long id, UserDTO user, List<OrderItemDTO> orderItems) {
+		super();
+		this.id = id;
+		this.user = user;
+		this.orderItems = orderItems;
+	}
 
 	public void addOrderItem(OrderItemDTO orderItem) {
 		if (orderItems == null) {
@@ -23,12 +34,12 @@ public class OrderDTO {
 		this.id = id;
 	}
 
-	public Long getUserId() {
-		return userId;
+	public UserDTO getUser() {
+		return user;
 	}
 
-	public void setUserId(Long userId) {
-		this.userId = userId;
+	public void setUser(UserDTO user) {
+		this.user = user;
 	}
 
 	public List<OrderItemDTO> getOrderItems() {
