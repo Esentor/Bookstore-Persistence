@@ -1,106 +1,154 @@
 package com.bookstore.persistence.service;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.TestPropertySource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import com.bookstore.persistence.dto.BookDTO;
 import com.bookstore.persistence.model.Book;
 import com.bookstore.persistence.repository.BookDAO;
 
-@DataJpaTest
-@TestPropertySource(locations = "classpath:test.properties")
 public class BookServiceTest {
 
-    @Autowired
+    @Mock
     private BookDAO bookDAO;
 
+    @InjectMocks
     private BookService bookService;
 
-    @BeforeEach
-    public void setUp() {
-        bookService = new BookService(bookDAO);
+    @SuppressWarnings("deprecation")
+	@BeforeEach
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
-    public void testCreateBook() {
-        // Test creating a new book
-        BookDTO newBookDTO = new BookDTO();
-        newBookDTO.setTitle("New Book");
-        newBookDTO.setAuthor("New Author");
-        newBookDTO.setPrice(29.99);
+    public void testGetAllBooksValidDataReturnsAllBooks() {
+        List<Book> books = new ArrayList<>();
+        books.add(new Book(1L, "Book 1", "Author 1", 29.99));
+        books.add(new Book(2L, "Book 2", "Author 2", 19.99));
+        when(bookDAO.findAll()).thenReturn(books);
 
-        BookDTO createdBookDTO = bookService.addBook(newBookDTO);
-
-        assertNotNull(createdBookDTO.getId());
-        assertEquals("New Book", createdBookDTO.getTitle());
-        assertEquals("New Author", createdBookDTO.getAuthor());
-        assertEquals(29.99, createdBookDTO.getPrice(), 0.01);
+        List<BookDTO> result = bookService.getAllBooks();
+        assertNotNull(result);
+        assertEquals(2, result.size());
     }
 
     @Test
-    public void testGetBookById() {
-        // Test retrieving a book by its ID
-        BookDTO newBookDTO = new BookDTO();
-        newBookDTO.setTitle("New Book");
-        newBookDTO.setAuthor("New Author");
-        newBookDTO.setPrice(29.99);
+    public void testGetBookByIdValidIdReturnsBookDTO() {
+        Long bookId = 1L;
+        Book book = new Book(bookId, "Book 1", "Author 1", 29.99);
+        when(bookDAO.findById(bookId)).thenReturn(Optional.of(book));
 
-        BookDTO createdBookDTO = bookService.addBook(newBookDTO);
-
-        BookDTO retrievedBookDTO = bookService.getBookById(createdBookDTO.getId());
-
-        assertNotNull(retrievedBookDTO);
-        assertEquals(createdBookDTO.getId(), retrievedBookDTO.getId());
-        assertEquals(createdBookDTO.getTitle(), retrievedBookDTO.getTitle());
-        assertEquals(createdBookDTO.getAuthor(), retrievedBookDTO.getAuthor());
-        assertEquals(createdBookDTO.getPrice(), retrievedBookDTO.getPrice(), 0.01);
+        BookDTO result = bookService.getBookById(bookId);
+        assertNotNull(result);
+        assertEquals(bookId, result.getId());
+        assertEquals("Book 1", result.getTitle());
+        assertEquals("Author 1", result.getAuthor());
+        assertEquals(29.99, result.getPrice());
     }
 
     @Test
-    public void testUpdateBook() {
-        // Test updating an existing book
-        BookDTO newBookDTO = new BookDTO();
-        newBookDTO.setTitle("New Book");
-        newBookDTO.setAuthor("New Author");
-        newBookDTO.setPrice(29.99);
+    public void testGetBookByIdInvalidIdReturnsNull() {
+        Long bookId = 1L;
+        when(bookDAO.findById(bookId)).thenReturn(Optional.empty());
 
-        BookDTO createdBookDTO = bookService.addBook(newBookDTO);
-
-        newBookDTO.setId(createdBookDTO.getId());
-        newBookDTO.setTitle("Updated Book");
-        newBookDTO.setAuthor("Updated Author");
-        newBookDTO.setPrice(24.99);
-
-        BookDTO updatedBookDTO = bookService.updateBook(newBookDTO);
-
-        assertNotNull(updatedBookDTO);
-        assertEquals(newBookDTO.getId(), updatedBookDTO.getId());
-        assertEquals("Updated Book", updatedBookDTO.getTitle());
-        assertEquals("Updated Author", updatedBookDTO.getAuthor());
-        assertEquals(24.99, updatedBookDTO.getPrice(), 0.01);
+        BookDTO result = bookService.getBookById(bookId);
+        assertNull(result);
     }
 
     @Test
-    public void testDeleteBook() {
-        // Test deleting an existing book
-        BookDTO newBookDTO = new BookDTO();
-        newBookDTO.setTitle("New Book");
-        newBookDTO.setAuthor("New Author");
-        newBookDTO.setPrice(29.99);
+    public void testAddBookValidBookDTOCreatesNewBook() {
+        BookDTO bookDTO = new BookDTO(null, "Book 1", "Author 1", 29.99);
+        when(bookDAO.save(any(Book.class))).thenReturn(new Book(1L, "Book 1", "Author 1", 29.99));
 
-        BookDTO createdBookDTO = bookService.addBook(newBookDTO);
-
-        bookService.deleteBook(createdBookDTO.getId());
-
-        List<Book> books = bookDAO.findAll();
-        assertEquals(0, books.size());
+        BookDTO result = bookService.addBook(bookDTO);
+        assertNotNull(result);
+        assertNotNull(result.getId());
+        assertEquals("Book 1", result.getTitle());
+        assertEquals("Author 1", result.getAuthor());
+        assertEquals(29.99, result.getPrice());
     }
+
+    @Test
+    public void testUpdateBookValidBookDTOUpdatesExistingBook() {
+        Long bookId = 1L;
+        Book existingBook = new Book(bookId, "Book 1", "Author 1", 29.99);
+        when(bookDAO.existsById(bookId)).thenReturn(true);
+        when(bookDAO.save(any(Book.class))).thenReturn(existingBook);
+
+        BookDTO bookDTO = new BookDTO(bookId, "Updated Book", "Updated Author", 19.99);
+        BookDTO result = bookService.updateBook(bookDTO);
+
+        assertNotNull(result);
+        assertEquals(bookId, result.getId());
+        assertEquals("Updated Book", result.getTitle());
+        assertEquals("Updated Author", result.getAuthor());
+        assertEquals(19.99, result.getPrice());
+    }
+
+    @Test
+    public void testUpdateBookInvalidBookDTOThrowsIllegalArgumentException() {
+        Long bookId = 1L;
+        when(bookDAO.existsById(bookId)).thenReturn(false);
+
+        BookDTO bookDTO = new BookDTO(bookId, "Updated Book", "Updated Author", 19.99);
+        assertThrows(IllegalArgumentException.class, () -> bookService.updateBook(bookDTO));
+    }
+
+    @Test
+    public void testDeleteBookValidIdDeletesExistingBook() {
+        Long bookId = 1L;
+        when(bookDAO.existsById(bookId)).thenReturn(true);
+
+        assertDoesNotThrow(() -> bookService.deleteBook(bookId));
+        verify(bookDAO, times(1)).deleteById(bookId);
+    }
+
+    @Test
+    public void testDeleteBookInvalidIdThrowsIllegalArgumentException() {
+        Long bookId = 1L;
+        when(bookDAO.existsById(bookId)).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class, () -> bookService.deleteBook(bookId));
+        verify(bookDAO, never()).deleteById(bookId);
+    }
+
+    @Test
+    public void testBookExistsExistingBookIdReturnsTrue() {
+        Long bookId = 1L;
+        when(bookDAO.existsById(bookId)).thenReturn(true);
+
+        boolean result = bookService.bookExists(bookId);
+        assertTrue(result);
+    }
+
+    @Test
+    public void testBookExistsNonExistingBookIdReturnsFalse() {
+        Long bookId = 1L;
+        when(bookDAO.existsById(bookId)).thenReturn(false);
+
+        boolean result = bookService.bookExists(bookId);
+        assertFalse(result);
+    }
+
 }

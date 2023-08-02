@@ -44,7 +44,6 @@ public class OrderConverter {
 	    OrderItem orderItem = new OrderItem();
 	    orderItem.setId(orderItemDTO.getId());
 
-	    // Assuming the BookDTO has a method to convert to Book entity (BookService.convertToEntity)
 	    Book book = BookConverter.convertToEntity(orderItemDTO.getBook());
 	    orderItem.setBook(book);
 
@@ -62,7 +61,6 @@ public class OrderConverter {
 
         List<OrderItem> orderItems = new ArrayList<>();
         for (OrderItemDTO orderItemDTO : orderDTO.getOrderItems()) {
-            // Assuming the OrderItemDTO has a method to convert to OrderItem entity
             OrderItem orderItem = convertToEntity(orderItemDTO);
             orderItem.setOrder(order);
             orderItems.add(orderItem);
@@ -81,7 +79,6 @@ public class OrderConverter {
 
         List<OrderItemDTO> orderItemDTOs = new ArrayList<>();
         for (OrderItem orderItem : order.getOrderItems()) {
-            // Assuming the OrderItem has a method to convert to OrderItemDTO
             OrderItemDTO orderItemDTO = toOrderItemDTO(orderItem);
             orderItemDTOs.add(orderItemDTO);
         }

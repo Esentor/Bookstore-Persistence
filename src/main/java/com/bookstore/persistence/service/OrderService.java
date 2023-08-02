@@ -23,6 +23,8 @@ public class OrderService {
 	}
 
 	public OrderDTO createOrder(OrderDTO orderDTO) {
+		if(orderDTO == null)
+			return null;
 		return OrderConverter.convertToDTO(orderDAO.save(OrderConverter.convertToEntity(orderDTO)));
 	}
 

@@ -3,169 +3,212 @@ package com.bookstore.persistence.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.TestPropertySource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.springframework.beans.BeanUtils;
 
 import com.bookstore.persistence.converter.OrderConverter;
-import com.bookstore.persistence.converter.UserConverter;
-import com.bookstore.persistence.dto.BookDTO;
 import com.bookstore.persistence.dto.OrderDTO;
 import com.bookstore.persistence.dto.OrderItemDTO;
 import com.bookstore.persistence.dto.UserDTO;
 import com.bookstore.persistence.model.Order;
-import com.bookstore.persistence.model.OrderItem;
 import com.bookstore.persistence.repository.OrderDAO;
-import com.bookstore.persistence.repository.OrderItemDAO;
-import com.bookstore.persistence.repository.UserDAO;
 
-@DataJpaTest
-@TestPropertySource(locations = "classpath:test.properties")
 public class OrderServiceTest {
 
-	@Autowired
-	private OrderDAO orderDAO;
+    @Mock
+    private OrderDAO orderDAO;
 
-	@Autowired
-	private OrderItemDAO orderItemDAO;
+    @InjectMocks
+    private OrderService orderService;
 
-	@Autowired
-	private UserDAO userDAO;
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
 
-	private OrderService orderService;
-	private static UserDTO testUser;
+    @Test
+    public void testCreateOrder() {
+        // Arrange
+        OrderDTO orderDTO = createSampleOrderDTO();
+        Order orderEntity = OrderConverter.convertToEntity(orderDTO);
 
-	@BeforeEach
-	public void setUp() {
-		orderService = new OrderService(orderDAO);
-		testUser = new UserDTO(1000L, "John", "Doe", "john.doe@example.com");
-		userDAO.save(UserConverter.convertToEntity(testUser));
-	}
+        Mockito.when(orderDAO.save(Mockito.any(Order.class))).thenReturn(orderEntity);
 
-	@AfterEach
-	public void tearDownAfterAll() {
-		userDAO.deleteById(testUser.getId());
-	}
+        // Act
+        OrderDTO createdOrder = orderService.createOrder(orderDTO);
 
-	// Test cases for CRUD operations
-	@Test
-	public void testCreateOrder() {
-		// Create an OrderDTO
-		OrderDTO orderDTO = new OrderDTO();
-		orderDTO.setUser(testUser);
+        // Assert
+        assertNotNull(createdOrder);
+        assertEquals(orderDTO.getUser().getId(), createdOrder.getUser().getId());
+        assertEquals(orderDTO.getOrderItems().size(), createdOrder.getOrderItems().size());
+    }
 
-		List<OrderItemDTO> orderItems = new ArrayList<>();
-		orderItems.add(new OrderItemDTO(1L, orderDTO, new BookDTO(1L, "Book 1", "Author 1", 19.99)));
-		orderItems.add(new OrderItemDTO(2L, orderDTO, new BookDTO(2L, "Book 2", "Author 2", 24.99)));
-		orderDTO.setOrderItems(orderItems);
+    @Test
+    public void testCreateOrderWithNullInput() {
+        // Arrange
+        OrderDTO orderDTO = null;
 
-		// Call the order service method to save the order
-		OrderDTO createdOrderDTO = orderService.createOrder(orderDTO);
+        // Act
+        OrderDTO createdOrder = orderService.createOrder(orderDTO);
 
-		// Retrieve the saved order from the database
-		Optional<Order> retrievedOrder = orderDAO.findById(createdOrderDTO.getId());
+        // Assert
+        assertNull(createdOrder);
+    }
 
-		// Assert the result
-		assertTrue(retrievedOrder.isPresent());
-		assertEquals(createdOrderDTO.getId(), retrievedOrder.get().getId());
-		assertEquals("John", retrievedOrder.get().getUser().getFirstName());
-		assertEquals("Doe", retrievedOrder.get().getUser().getLastName());
-		assertEquals("john.doe@example.com", retrievedOrder.get().getUser().getEmail());
-		assertEquals(2, retrievedOrder.get().getOrderItems().size());
-	}
+    @Test
+    public void testGetAllOrders() {
+        // Arrange
+        List<Order> orders = createSampleOrderEntities();
+        Mockito.when(orderDAO.findAll()).thenReturn(orders);
 
-	@Test
-	public void testGetOrderById() {
-		// Prepare the mock data for the order
-		OrderDTO orderDTO = new OrderDTO();
-		orderDTO.setUser(testUser);
+        // Act
+        List<OrderDTO> orderDTOs = orderService.getAllOrders();
 
-		List<OrderItemDTO> orderItems = new ArrayList<>();
-		orderItems.add(new OrderItemDTO(1L, orderDTO, new BookDTO(1L, "Book 1", "Author 1", 19.99)));
-		orderDTO.setOrderItems(orderItems);
+        // Assert
+        assertNotNull(orderDTOs);
+        assertEquals(orders.size(), orderDTOs.size());
+    }
 
-		// Convert OrderDTO to Order and save it to the database
-		Order order = OrderConverter.convertToEntity(orderDTO);
-		orderDAO.save(order);
+    @Test
+    public void testGetOrderById() {
+        // Arrange
+        Long orderId = 1L;
+        Order orderEntity = createSampleOrderEntity(orderId);
+        Mockito.when(orderDAO.findById(orderId)).thenReturn(java.util.Optional.of(orderEntity));
 
-		// Call the order service method to retrieve the order by ID
-		OrderDTO retrievedOrderDTO = orderService.getOrderById(order.getId());
+        // Act
+        OrderDTO orderDTO = orderService.getOrderById(orderId);
 
-		// Assert the result
-		assertNotNull(retrievedOrderDTO);
-		assertEquals(order.getId(), retrievedOrderDTO.getId());
-		assertEquals("John", retrievedOrderDTO.getUser().getFirstName());
-		assertEquals("Doe", retrievedOrderDTO.getUser().getLastName());
-		assertEquals("john.doe@example.com", retrievedOrderDTO.getUser().getEmail());
-		assertEquals(1, retrievedOrderDTO.getOrderItems().size());
-	}
+        // Assert
+        assertNotNull(orderDTO);
+        assertEquals(orderEntity.getId(), orderDTO.getId());
+    }
 
-	@Test
-	public void testUpdateOrder() {
-		// Prepare the mock data for the order
-		OrderDTO orderDTO = new OrderDTO();
-		orderDTO.setUser(testUser);
+    @Test
+    public void testGetNonExistentOrderById() {
+        // Arrange
+        Long orderId = 100L;
+        Mockito.when(orderDAO.findById(orderId)).thenReturn(java.util.Optional.empty());
 
-		List<OrderItemDTO> orderItems = new ArrayList<>();
-		orderItems.add(new OrderItemDTO(1L, orderDTO, new BookDTO(1L, "Book 1", "Author 1", 19.99)));
-		orderDTO.setOrderItems(orderItems);
+        // Act
+        OrderDTO orderDTO = orderService.getOrderById(orderId);
 
-		// Convert OrderDTO to Order and save it to the database
-		Order order = OrderConverter.convertToEntity(orderDTO);
-		orderDAO.save(order);
+        // Assert
+        assertNull(orderDTO);
+    }
 
-		// Modify some properties of the orderDTO
-		orderDTO.setUser(new UserDTO(1L, "Updated John", "Doe", "updated.john.doe@example.com"));
+    @Test
+    public void testUpdateOrder() {
+        // Arrange
+        Long orderId = 1L;
+        OrderDTO updatedOrderDTO = createSampleOrderDTO();
+        updatedOrderDTO.setId(orderId);
 
-		// Call the order service method to update the order
-		OrderDTO updatedOrderDTO = orderService.updateOrder(orderDTO);
+        Order existingOrderEntity = createSampleOrderEntity(orderId);
+        Mockito.when(orderDAO.findById(orderId)).thenReturn(java.util.Optional.of(existingOrderEntity));
 
-		// Retrieve the updated order from the database
-		Optional<Order> updatedOrder = orderDAO.findById(updatedOrderDTO.getId());
+        Order updatedOrderEntity = OrderConverter.convertToEntity(updatedOrderDTO);
+        BeanUtils.copyProperties(updatedOrderEntity, existingOrderEntity, "id");
+        Mockito.when(orderDAO.save(Mockito.any(Order.class))).thenReturn(existingOrderEntity);
 
-		// Assert the result
-		assertTrue(updatedOrder.isPresent());
-		assertEquals(updatedOrderDTO.getId(), updatedOrder.get().getId());
-		assertEquals("Updated John", updatedOrder.get().getUser().getFirstName());
-		assertEquals("Doe", updatedOrder.get().getUser().getLastName());
-		assertEquals("updated.john.doe@example.com", updatedOrder.get().getUser().getEmail());
-		assertEquals(1, updatedOrder.get().getOrderItems().size());
-	}
+        // Act
+        OrderDTO resultOrderDTO = orderService.updateOrder(updatedOrderDTO);
 
-	@Test
-	public void testDeleteOrder() {
-		// Prepare the mock data for the order
-		OrderDTO orderDTO = new OrderDTO();
-		orderDTO.setUser(testUser);
+        // Assert
+        assertNotNull(resultOrderDTO);
+        assertEquals(updatedOrderDTO.getId(), resultOrderDTO.getId());
+        assertEquals(updatedOrderDTO.getUser().getId(), resultOrderDTO.getUser().getId());
+        assertEquals(updatedOrderDTO.getOrderItems().size(), resultOrderDTO.getOrderItems().size());
+    }
 
-		List<OrderItemDTO> orderItems = new ArrayList<>();
-		orderItems.add(new OrderItemDTO(1L, orderDTO, new BookDTO(1L, "Book 1", "Author 1", 19.99)));
-		orderDTO.setOrderItems(orderItems);
+    @Test
+    public void testUpdateNonExistentOrder() {
+        // Arrange
+        Long orderId = 100L;
+        OrderDTO updatedOrderDTO = createSampleOrderDTO();
+        updatedOrderDTO.setId(orderId);
 
-		// Convert OrderDTO to Order and save it to the database
-		Order order = OrderConverter.convertToEntity(orderDTO);
-		orderDAO.save(order);
+        Mockito.when(orderDAO.findById(orderId)).thenReturn(java.util.Optional.empty());
 
-		// Call the order service method to delete the order
-		orderService.deleteOrder(order.getId());
+        // Act
+        OrderDTO resultOrderDTO = orderService.updateOrder(updatedOrderDTO);
 
-		// Retrieve the order from the database
-		Optional<Order> deletedOrder = orderDAO.findById(order.getId());
+        // Assert
+        assertNull(resultOrderDTO);
+    }
 
-		// Assert that the order is deleted (should not be present)
-		assertFalse(deletedOrder.isPresent());
+    @Test
+    public void testDeleteOrder() {
+        // Arrange
+        Long orderId = 1L;
+        Order existingOrderEntity = createSampleOrderEntity(orderId);
+        Mockito.when(orderDAO.findById(orderId)).thenReturn(java.util.Optional.of(existingOrderEntity));
 
-		// Also, assert that the associated order items are deleted
-		List<OrderItem> orderItemsAfterDeletion = orderItemDAO.findAllByOrderId(order.getId());
-		assertTrue(orderItemsAfterDeletion.isEmpty());
-	}
+        // Act
+        boolean isDeleted = orderService.deleteOrder(orderId);
+
+        // Assert
+        assertTrue(isDeleted);
+    }
+
+    @Test
+    public void testDeleteNonExistentOrder() {
+        // Arrange
+        Long orderId = 100L;
+        Mockito.when(orderDAO.findById(orderId)).thenReturn(java.util.Optional.empty());
+
+        // Act
+        boolean isDeleted = orderService.deleteOrder(orderId);
+
+        // Assert
+        assertFalse(isDeleted);
+    }
+
+    // Helper methods for test data creation
+
+    private OrderDTO createSampleOrderDTO() {
+        OrderDTO orderDTO = new OrderDTO();
+        
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(1L);
+        orderDTO.setUser(userDTO);
+
+        List<OrderItemDTO> orderItems = new ArrayList<>();
+        orderItems.add(createSampleOrderItemDTO(1L));
+        orderItems.add(createSampleOrderItemDTO(2L));
+        orderDTO.setOrderItems(orderItems);
+
+        return orderDTO;
+    }
+
+    private List<Order> createSampleOrderEntities() {
+        List<Order> orders = new ArrayList<>();
+        orders.add(createSampleOrderEntity(1L));
+        orders.add(createSampleOrderEntity(2L));
+        orders.add(createSampleOrderEntity(3L));
+        return orders;
+    }
+
+    private Order createSampleOrderEntity(Long id) {
+        Order order = new Order();
+        order.setId(id);
+        return order;
+    }
+
+    private OrderItemDTO createSampleOrderItemDTO(Long id) {
+        OrderItemDTO orderItemDTO = new OrderItemDTO();
+        orderItemDTO.setId(id);
+        return orderItemDTO;
+    }
 }
